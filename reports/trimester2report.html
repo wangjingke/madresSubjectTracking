@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <title>Trimester 2 report</title>
+    <script src="../js/madres_schedule_functions.js"> </script>
+    <script src="https://code.jquery.com/jquery-3.1.0.min.js" integrity="sha256-cCueBR6CsyA4/9szpPfrX3s49M9vUU5BgtiJj06wt/s=" crossorigin="anonymous"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.11/css/jquery.dataTables.css">
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.11/js/jquery.dataTables.js"></script>
+</head>
+
+<body>
+<h1>MADRES Trimester 2 report</h1>
+<p>Total number of participants is <span id="totalNum"></span></p>
+<p>The reference date (refDate) you selected is <span id="refDate"></span></p>
+<input type="button" id="download" value="Download Report" onclick=download() />
+
+<script type="text/javascript">
+refDay = getCookie("refDay");
+document.getElementById("refDate").innerHTML = refDay;
+schedule = JSON.parse(getCookie("schedule"));
+document.getElementById("totalNum").innerHTML = schedule.length - 1;
+// add new variable to the schedule
+schedule[0].push.apply(schedule[0], ["Tr2_inWindow", "Tr2_Ques", "GestAge"]);
+header = schedule[0];
+for (var i = 1; i < schedule.length; i++) {
+    if (schedule[i][header.indexOf("Tr2_PSE")]=="" && schedule[i][header.indexOf("Tr2_DadInfo")]=="") {schedule[i][header.indexOf("Tr2_Ques")]="neverStarted"}
+    if (schedule[i][header.indexOf("Tr2_PSE")]!="" && schedule[i][header.indexOf("Tr2_DadInfo")]=="") {schedule[i][header.indexOf("Tr2_Ques")]="incomplete"}
+    if (schedule[i][header.indexOf("Tr2_PSE")]!="" && schedule[i][header.indexOf("Tr2_DadInfo")]!="") {schedule[i][header.indexOf("Tr2_Ques")]="done"}
+    // in window for tr2, at least 21 days has passed from visit 2 to reference date, use countDay to convert string to date
+    var tr2_startX = "";
+    var tr2_endX = "";
+    if (schedule[i][header.indexOf("Tr1_Anthr")==""]) {
+        tr2_startX = countDay(schedule[i][header.indexOf("Tr2_Start")], 0).getTime();
+        tr2_endX = countDay(schedule[i][header.indexOf("Tr2_End")], 0).getTime();
+    } else {
+        tr2_startX = Math.max(countDay(schedule[i][header.indexOf("Tr2_Start")], 0).getTime(), countDay(schedule[i][header.indexOf("Tr1_Anthr")], 0).getTime());
+        tr2_endX = countDay(schedule[i][header.indexOf("Tr2_End")], 0).getTime();
+    }
+
+    if (tr2_startX < countDay(refDay, 0).getTime() && countDay(refDay, 0).getTime() < tr2_endX) {
+        schedule[i][header.indexOf("Tr2_inWindow")]=true;
+    } else {
+        schedule[i][header.indexOf("Tr2_inWindow")]=false;
+    }
+    //Gestational Age as of reference date
+    if (schedule[i][header.indexOf("DueDate")]!="") {
+        schedule[i][header.indexOf("GestAge")] = gestationalAge(countDay(refDay, 0), schedule[i][header.indexOf("DueDate")]);
+    }
+}
+</script>
+
+<!--scenario 1, subjects in trimester call window and need to complete questions -->
+<h3 id="tr2_inWindow_needCall_title">Subjects in trimester 2 call window and never started questionnaire</h3>
+<p>(total = <span id="tr2_inWindow_needCall_num"></span>)</p>
+<div id="tr2_inWindow_needCall" style="display:none;">
+    <p id="tr2_inWindow_needCall_list"></p>
+    <table id="tr2_inWindow_needCall_table" class="display" data-order='[[ 0, "asc" ]]' data-page-length='25'>
+        <thead>
+            <tr>
+                <th>Subject ID</th>
+                <th>Due Date</th>
+                <th>18w0d Date</th>
+                <th>27w6d Date</th>
+                <th>Gestational Age as of refDate</th>
+            </tr>
+        </thead>
+    </table>
+    <script type="text/javascript">
+    scenario1 = [schedule[0]];
+    for (var i = 1; i < schedule.length; i++) {
+        if (
+            schedule[i][header.indexOf("Withdraw")]=="" &&
+            schedule[i][header.indexOf("Tr2_Ques")]=="neverStarted" &&
+            schedule[i][header.indexOf("Tr2_inWindow")]==true
+        ) {
+            scenario1.push(schedule[i]);
+        }
+    }
+    tr2_inWindow_needCall_list = [];
+    for (var i = 1; i < scenario1.length; i++) {tr2_inWindow_needCall_list.push(scenario1[i][header.indexOf("SubjectID")])}
+    document.getElementById("tr2_inWindow_needCall_num").innerHTML = scenario1.length - 1;
+    document.getElementById("tr2_inWindow_needCall_list").innerHTML = tr2_inWindow_needCall_list;
+    tr2_inWindow_needCall_report = [];
+    for(var i = 1; i < scenario1.length; i++) { //skip header
+        tr2_inWindow_needCall_report.push([
+            scenario1[i][header.indexOf("SubjectID")],
+            scenario1[i][header.indexOf("DueDate")],
+            scenario1[i][header.indexOf("Tr2_Start")],
+            scenario1[i][header.indexOf("Tr2_End")],
+            scenario1[i][header.indexOf("GestAge")]
+        ]);
+    }
+    if (tr2_inWindow_needCall_report.length > 0) {
+        $(document).ready(function(){
+            $("#tr2_inWindow_needCall_table").DataTable({
+                paging: true,
+                data: tr2_inWindow_needCall_report, //remove the header
+                "columns": [
+                    {className: "dt-body-center" },
+                    {className: "dt-body-center" },
+                    {className: "dt-body-center" },
+                    {className: "dt-body-center" },
+                    {className: "dt-body-center" }
+                ]
+            });
+        });
+        document.getElementById("tr2_inWindow_needCall").style.display = "block";
+    }
+    </script>
+</div>
+
+<!-- scenario 2, subjected completed trimester 2 questionnaire-->
+<h3 id="tr2_completed_title">Subjects completed trimester 2 questionnaire</h3>
+<p>(total = <span id="tr2_completed_num"></span>)</p>
+<div id="tr2_completed" style="display:none;">
+    <p id="tr2_completed_list"></p>
+    <table id="tr2_completed_table" class="display" data-order='[[ 0, "asc" ]]' data-page-length='5'>
+        <thead>
+            <tr>
+                <th>Subject ID</th>
+                <th>Due Date</th>
+                <th>Date Completed</th>
+                <th>Gestational Age as of refDate</th>
+            </tr>
+        </thead>
+    </table>
+    <script type="text/javascript">
+    scenario2 = [schedule[0]];
+    for (var i = 1; i < schedule.length; i++) {
+        if (schedule[i][header.indexOf("Withdraw")]=="" && schedule[i][header.indexOf("Tr2_Ques")]=="done") {
+            scenario2.push(schedule[i]);
+        }
+    }
+    tr2_completed_list = [];
+    for (var i = 1; i < scenario2.length; i++) {tr2_completed_list.push(scenario2[i][header.indexOf("SubjectID")])}
+    document.getElementById("tr2_completed_num").innerHTML = scenario2.length - 1;
+    document.getElementById("tr2_completed_list").innerHTML = tr2_completed_list;
+    tr2_completed_report = [];
+    for (var i = 1; i < scenario2.length; i++) {
+        tr2_completed_report.push([
+            scenario2[i][header.indexOf("SubjectID")],
+            scenario2[i][header.indexOf("DueDate")],
+            scenario2[i][header.indexOf("Tr2_DadInfo")],
+            scenario2[i][header.indexOf("GestAge")]
+        ])
+    }
+    if (tr2_completed_report.length > 0) {
+        $(document).ready(function(){
+            $("#tr2_completed_table").DataTable({
+                paging: true,
+                data: tr2_completed_report, //remove the header
+                "columns": [
+                    {className: "dt-body-center" },
+                    {className: "dt-body-center" },
+                    {className: "dt-body-center" },
+                    {className: "dt-body-center" }
+                ]
+            });
+        });
+        document.getElementById("tr2_completed").style.display = "block";
+    }
+    </script>
+</div>
+
+
+<!-- scenario 3, subjects in trimester 2 window but with incomplete trimester 2 questionnaires -->
+<h3 id="tr2_inWindow_incomplete_title">Subjects in trimester 2 call window with incomplete trimester 2 questionnaires</h3>
+<p>(total = <span id="tr2_inWindow_incomplete_num"></span>)</p>
+<div id="tr2_inWindow_incomplete" style="display:none;">
+    <p id="tr2_inWindow_incomplete_list"></p>
+    <table id="tr2_inWindow_incomplete_table" class="display" data-order='[[ 0, "asc" ]]' data-page-length='25'>
+        <thead>
+            <tr>
+                <th>Subject ID</th>
+                <th>Due Date</th>
+                <th>Gestational Age as of refDate</th>
+            </tr>
+        </thead>
+    </table>
+    <script type="text/javascript">
+    scenario3 = [schedule[0]];
+    for (var i = 1; i < schedule.length; i++) {
+        if (schedule[i][header.indexOf("Withdraw")]=="" && schedule[i][header.indexOf("Tr2_Ques")]=="incomplete" && schedule[i][header.indexOf("Tr2_inWindow")]==true) {
+            scenario3.push(schedule[i]);
+        }
+    }
+    tr2_inWindow_incomplete_list = [];
+    for (var i = 1; i < scenario3.length; i++) {tr2_inWindow_incomplete_list.push(scenario3[i][header.indexOf("SubjectID")])}
+    document.getElementById("tr2_inWindow_incomplete_num").innerHTML = scenario3.length - 1;
+    document.getElementById("tr2_inWindow_incomplete_list").innerHTML = tr2_inWindow_incomplete_list;
+    tr2_inWindow_incomplete_report = [];
+    for (var i = 1; i < scenario3.length; i++) {
+        tr2_inWindow_incomplete_report.push([
+            scenario3[i][header.indexOf("SubjectID")],
+            scenario3[i][header.indexOf("DueDate")],
+            scenario3[i][header.indexOf("GestAge")]
+        ])
+    }
+    if (tr2_inWindow_incomplete_report.length > 0) {
+        $(document).ready(function(){
+            $("#tr2_inWindow_incomplete_table").DataTable({
+                paging: true,
+                data: tr2_inWindow_incomplete_report, //remove the header
+                "columns": [
+                    {className: "dt-body-center" },
+                    {className: "dt-body-center" },
+                    {className: "dt-body-center" }
+                ]
+            });
+        });
+        document.getElementById("tr2_inWindow_incomplete").style.display = "block";
+    }
+    </script>
+</div>
+
+<!-- scenario 4, subjects out of trimester 2 window with incomplete trimester 2 questionnaires -->
+<h3 id="tr2_outWindow_incomplete_title">Subjects out of trimester 2 call window with incomplete trimester 2 questionnaires</h3>
+<p>(total = <span id="tr2_outWindow_incomplete_num"></span>)</p>
+<div id="tr2_outWindow_incomplete" style="display:none;">
+    <p id="tr2_outWindow_incomplete_list"></p>
+    <table id="tr2_outWindow_incomplete_table" class="display" data-order='[[ 0, "asc" ]]' data-page-length='5'>
+        <thead>
+            <tr>
+                <th>Subject ID</th>
+                <th>Due Date</th>
+                <th>Gestational Age as of refDate</th>
+            </tr>
+        </thead>
+    </table>
+    <script type="text/javascript">
+    scenario4 = [schedule[0]];
+    for (var i = 1; i < schedule.length; i++) {
+        if (schedule[i][header.indexOf("Withdraw")]=="" && schedule[i][header.indexOf("Tr2_Ques")]=="incomplete" && schedule[i][header.indexOf("Tr2_inWindow")]==false) {
+            scenario4.push(schedule[i]);
+        }
+    }
+    tr2_outWindow_incomplete_list = [];
+    for (var i = 1; i < scenario4.length; i++) {tr2_outWindow_incomplete_list.push(scenario4[i][header.indexOf("SubjectID")])}
+    document.getElementById("tr2_outWindow_incomplete_num").innerHTML = scenario4.length - 1;
+    document.getElementById("tr2_outWindow_incomplete_list").innerHTML = tr2_outWindow_incomplete_list;
+    tr2_outWindow_incomplete_report = [];
+    for (var i = 1; i < scenario4.length; i++) {
+        tr2_outWindow_incomplete_report.push([
+            scenario4[i][header.indexOf("SubjectID")],
+            scenario4[i][header.indexOf("DueDate")],
+            scenario4[i][header.indexOf("GestAge")]
+        ])
+    }
+    if (tr2_outWindow_incomplete_report.length > 0) {
+        $(document).ready(function(){
+            $("#tr2_outWindow_incomplete_table").DataTable({
+                paging: true,
+                data: tr2_outWindow_incomplete_report, //remove the header
+                "columns": [
+                    {className: "dt-body-center" },
+                    {className: "dt-body-center" },
+                    {className: "dt-body-center" }
+                ]
+            });
+        });
+        document.getElementById("tr2_outWindow_incomplete").style.display = "block";
+    }
+    </script>
+</div>
+
+<!-- scenario 5, subjects missed all trimester 2 questionnaires and out of window, excluding dropout-->
+<h3 id="tr2_outWindow_neverStarted_title">Subjects out of trimester 2 call window with none of the trimester 2 questionnaires completed</h3>
+<p>(total = <span id="tr2_outWindow_neverStarted_num"></span>)</p>
+<div id="tr2_outWindow_neverStarted" style="display:none;">
+    <p id="tr2_outWindow_neverStarted_list"></p>
+    <table id="tr2_outWindow_neverStarted_table" class="display" data-order='[[ 0, "asc" ]]' data-page-length='5'>
+        <thead>
+            <tr>
+                <th>Subject ID</th>
+                <th>Due Date</th>
+                <th>Gestational Age as of refDate</th>
+            </tr>
+        </thead>
+    </table>
+    <script type="text/javascript">
+    scenario5 = [schedule[0]];
+    for (var i = 1; i < schedule.length; i++) {
+        if (schedule[i][header.indexOf("Withdraw")]=="" && schedule[i][header.indexOf("Tr2_Ques")]=="neverStarted" && schedule[i][header.indexOf("Tr2_inWindow")]==false) {
+            scenario5.push(schedule[i]);
+        }
+    }
+    tr2_outWindow_neverStarted_list = [];
+    for (var i = 1; i < scenario5.length; i++) {tr2_outWindow_neverStarted_list.push(scenario5[i][header.indexOf("SubjectID")])}
+    document.getElementById("tr2_outWindow_neverStarted_num").innerHTML = scenario5.length - 1;
+    document.getElementById("tr2_outWindow_neverStarted_list").innerHTML = tr2_outWindow_neverStarted_list;
+    tr2_outWindow_neverStarted_report = [];
+    for (var i = 1; i < scenario5.length; i++) {
+        tr2_outWindow_neverStarted_report.push([
+            scenario5[i][header.indexOf("SubjectID")],
+            scenario5[i][header.indexOf("DueDate")],
+            scenario5[i][header.indexOf("GestAge")]
+        ])
+    }
+    if (tr2_outWindow_neverStarted_report.length > 0) {
+        $(document).ready(function(){
+            $("#tr2_outWindow_neverStarted_table").DataTable({
+                paging: true,
+                data: tr2_outWindow_neverStarted_report, //remove the header
+                "columns": [
+                    {className: "dt-body-center" },
+                    {className: "dt-body-center" },
+                    {className: "dt-body-center" }
+                ]
+            });
+        });
+        document.getElementById("tr2_outWindow_neverStarted").style.display = "block";
+    }
+    </script>
+</div>
+
+<!-- scenario 6, drop-outs -->
+<h3 id="tr2_dropout_title">Subjects dropped out of the study</h3>
+<p>(total = <span id="tr2_dropout_num"></span>)</p>
+<div id="tr2_dropout" style="display:none;">
+    <p id="tr2_dropout_list"></p>
+    <table id="tr2_dropout_table" class="display" data-order='[[ 0, "asc" ]]' data-page-length='5'>
+        <thead>
+            <tr>
+                <th>Subject ID</th>
+                <th>Due Date</th>
+                <th>Drop Out</th>
+                <th>Trimester 2 Questionnaires</th>
+            </tr>
+        </thead>
+    </table>
+    <script type="text/javascript">
+    scenario6 = [schedule[0]];
+    for (var i = 1; i < schedule.length; i++) {if (schedule[i][header.indexOf("Withdraw")]!="") {scenario6.push(schedule[i])}}
+    tr2_dropout_list = [];
+    for (var i = 1; i < scenario6.length; i++) {tr2_dropout_list.push(scenario6[i][header.indexOf("SubjectID")])}
+    document.getElementById("tr2_dropout_num").innerHTML = scenario6.length - 1;
+    document.getElementById("tr2_dropout_list").innerHTML = tr2_dropout_list;
+    tr2_dropout_report = [];
+    for (var i = 1; i < scenario6.length; i++) {
+        tr2_dropout_report.push([
+            scenario6[i][header.indexOf("SubjectID")],
+            scenario6[i][header.indexOf("DueDate")],
+            scenario6[i][header.indexOf("Withdraw")],
+            scenario6[i][header.indexOf("Tr2_Ques")]
+        ])
+    }
+    if (tr2_dropout_report.length > 0) {
+        $(document).ready(function(){
+            $("#tr2_dropout_table").DataTable({
+                paging: true,
+                data: tr2_dropout_report, //remove the header
+                "columns": [
+                    {className: "dt-body-center" },
+                    {className: "dt-body-center" },
+                    {className: "dt-body-center" },
+                    {className: "dt-body-center" }
+                ]
+            });
+        });
+        document.getElementById("tr2_dropout").style.display = "block";
+    }
+    </script>
+</div>
+
+<script type="text/javascript">
+function download() {
+    var content = "data:text/csv;charset=utf-8,";
+    var scenarios = [
+        ["As of the reference day "+refDay],
+        [document.getElementById("tr2_inWindow_needCall_title").innerHTML+"; total = "+document.getElementById("tr2_inWindow_needCall_num").innerHTML],
+        tr2_inWindow_needCall_list,
+        [document.getElementById("tr2_completed_title").innerHTML+"; total = "+document.getElementById("tr2_completed_num").innerHTML],
+        tr2_completed_list,
+        [document.getElementById("tr2_inWindow_incomplete_title").innerHTML+"; total = "+document.getElementById("tr2_inWindow_incomplete_num").innerHTML],
+        tr2_inWindow_incomplete_list,
+        [document.getElementById("tr2_outWindow_incomplete_title").innerHTML+"; total = "+document.getElementById("tr2_outWindow_incomplete_num").innerHTML],
+        tr2_outWindow_incomplete_list,
+        [document.getElementById("tr2_outWindow_neverStarted_title").innerHTML+"; total = "+document.getElementById("tr2_outWindow_neverStarted_num").innerHTML],
+        tr2_outWindow_neverStarted_list,
+        [document.getElementById("tr2_dropout_title").innerHTML+"; total = "+document.getElementById("tr2_dropout_num").innerHTML],
+        tr2_dropout_list
+    ];
+
+    scenarios.forEach(function(infoArray, index){
+       dataString = infoArray.join(";");
+       content += dataString + "\n";
+    });
+
+    var encodedUri = encodeURI(content);
+    var link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "madres_schedule_report_"+dateCut(new Date())+".csv");
+    document.body.appendChild(link); // Required for FireFox
+    link.click()
+}
+</script>
+
+</body>
+</html>

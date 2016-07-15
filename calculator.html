@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="https://code.jquery.com/jquery-2.2.3.min.js" charset="utf-8"> </script>
+<script src="./js/moment.min.js"></script>
+<script src="./js/combodate.js"></script>
+<script src="./js/madres_schedule_functions.js"></script>
+</head>
+
+<body>
+<h1>MADRES Trimester Window Calculator</h1>
+<p>Please input the reference date you would like use to calculate gestational age</p>
+<input type="text" id="refDate" data-format="YYYY-MM-DD" data-template="YYYY MMM D" name="date"/>
+<p>Please input the expected due date</p>
+<input type="text" id="dueDate" data-format="YYYY-MM-DD" data-template="YYYY MMM D" name="date"/>
+<input type="button" id="submit" value="Submit" onclick = "submit()"/>
+
+<div id="results" style="display:none;">
+    <p>All the dates are shown in the format as YYYY-MM-DD</p>
+    <p>Trimester 2 call window (18w0d to 27w6d): <span id="tr2"></span></p>
+    <p>Trimester 3 call window (28w0d to 34w6d): <span id="tr3c"></span></p>
+    <p>Trimester 3 visit window (30w0d to 34w6d): <span id="tr3v"></span></p>
+    <p>Gestational age as of today (<span id="today"></span>): <span id="gestAge"></span></p>
+    <p>
+        Gestational age as of <span id="referenceDate"></span>: <span id="gestationalAgeX"></span>
+    </p>
+</div>
+
+<script>
+
+$(function(){
+    $('#dueDate').combodate({
+        firstItem: "name",
+        minYear: 2016,
+        maxYear: 2020
+    });
+});
+
+$(function(){
+    $('#refDate').combodate({
+        firstItem: "name",
+        value: today,
+        minYear: 2016,
+        maxYear: 2020
+    });
+});
+
+
+var today = new Date()
+
+function submit() {
+    var dueDate = $("#dueDate").combodate("getValue", "YYYY-MM-DD");
+    tr2Start = countDay(dueDate, -154);
+    tr2End = countDay(dueDate, -85);
+    tr3cStart = countDay(dueDate, -84);
+    tr3cEnd = countDay(dueDate, -36);
+    tr3vStart = countDay(dueDate, -70);
+    tr3vEnd = countDay(dueDate, -36);
+
+    gestAgeToday = gestationalAge(today, dueDate)
+
+    document.getElementById("tr2").innerHTML = "From " + dateCut(tr2Start) + " To " + dateCut(tr2End);
+    document.getElementById("tr3c").innerHTML = "From " + dateCut(tr3cStart) + " To " + dateCut(tr3cEnd);
+    document.getElementById("tr3v").innerHTML = "From " + dateCut(tr3vStart) + " To " + dateCut(tr3vEnd);
+    document.getElementById("gestAge").innerHTML = gestAgeToday;
+    document.getElementById('today').innerHTML = dateCut(today);
+
+    var refDay = $("#refDate").combodate("getValue", "YYYY-MM-DD");
+    gestAgeX = gestationalAge(countDay(refDay, 0), dueDate);
+    document.getElementById('referenceDate').innerHTML = dateCut(countDay(refDay, 0));
+    document.getElementById('gestationalAgeX').innerHTML = gestAgeX;
+
+    document.getElementById("results").style.display = "block";
+}
+
+</script>
+
+</body>
+</html>
