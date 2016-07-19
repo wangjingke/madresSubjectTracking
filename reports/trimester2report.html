@@ -39,11 +39,20 @@ for (var i = 1; i < schedule.length; i++) {
         tr2_endX = countDay(schedule[i][header.indexOf("Tr2_End")], 0).getTime();
     }
 
-    if (tr2_startX < countDay(refDay, 0).getTime() && countDay(refDay, 0).getTime() < tr2_endX) {
+    if (countDay(refDay, 0).getTime() < tr2_startX) {
+        schedule[i][header.indexOf("Tr2_inWindow")] = "preWindow";
+    } else if (tr2_startX <= countDay(refDay, 0).getTime() && countDay(refDay, 0).getTime() <= tr2_endX) {
+        schedule[i][header.indexOf("Tr2_inWindow")] = "inWindow";
+    } else {
+        schedule[i][header.indexOf("Tr2_inWindow")] = "postWindow";
+    }
+/*
+    if (tr2_startX <= countDay(refDay, 0).getTime() && countDay(refDay, 0).getTime() <= tr2_endX) {
         schedule[i][header.indexOf("Tr2_inWindow")]=true;
     } else {
         schedule[i][header.indexOf("Tr2_inWindow")]=false;
     }
+*/
     //Gestational Age as of reference date
     if (schedule[i][header.indexOf("DueDate")]!="") {
         schedule[i][header.indexOf("GestAge")] = gestationalAge(countDay(refDay, 0), schedule[i][header.indexOf("DueDate")]);
@@ -73,7 +82,7 @@ for (var i = 1; i < schedule.length; i++) {
         if (
             schedule[i][header.indexOf("Withdraw")]=="" &&
             schedule[i][header.indexOf("Tr2_Ques")]=="neverStarted" &&
-            schedule[i][header.indexOf("Tr2_inWindow")]==true
+            schedule[i][header.indexOf("Tr2_inWindow")]=="inWindow"
         ) {
             scenario1.push(schedule[i]);
         }
@@ -182,7 +191,7 @@ for (var i = 1; i < schedule.length; i++) {
     <script type="text/javascript">
     scenario3 = [schedule[0]];
     for (var i = 1; i < schedule.length; i++) {
-        if (schedule[i][header.indexOf("Withdraw")]=="" && schedule[i][header.indexOf("Tr2_Ques")]=="incomplete" && schedule[i][header.indexOf("Tr2_inWindow")]==true) {
+        if (schedule[i][header.indexOf("Withdraw")]=="" && schedule[i][header.indexOf("Tr2_Ques")]=="incomplete" && schedule[i][header.indexOf("Tr2_inWindow")]=="inWindow") {
             scenario3.push(schedule[i]);
         }
     }
@@ -232,7 +241,7 @@ for (var i = 1; i < schedule.length; i++) {
     <script type="text/javascript">
     scenario4 = [schedule[0]];
     for (var i = 1; i < schedule.length; i++) {
-        if (schedule[i][header.indexOf("Withdraw")]=="" && schedule[i][header.indexOf("Tr2_Ques")]=="incomplete" && schedule[i][header.indexOf("Tr2_inWindow")]==false) {
+        if (schedule[i][header.indexOf("Withdraw")]=="" && schedule[i][header.indexOf("Tr2_Ques")]=="incomplete" && schedule[i][header.indexOf("Tr2_inWindow")]=="postWindow") {
             scenario4.push(schedule[i]);
         }
     }
@@ -282,7 +291,7 @@ for (var i = 1; i < schedule.length; i++) {
     <script type="text/javascript">
     scenario5 = [schedule[0]];
     for (var i = 1; i < schedule.length; i++) {
-        if (schedule[i][header.indexOf("Withdraw")]=="" && schedule[i][header.indexOf("Tr2_Ques")]=="neverStarted" && schedule[i][header.indexOf("Tr2_inWindow")]==false) {
+        if (schedule[i][header.indexOf("Withdraw")]=="" && schedule[i][header.indexOf("Tr2_Ques")]=="neverStarted" && schedule[i][header.indexOf("Tr2_inWindow")]=="postWindw") {
             scenario5.push(schedule[i]);
         }
     }
