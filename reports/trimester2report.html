@@ -38,9 +38,6 @@ for (var i = 1; i < schedule.length; i++) {
         tr2_startX = Math.max(countDay(schedule[i][header.indexOf("Tr2_Start")], 0).getTime(), countDay(schedule[i][header.indexOf("Tr1_Anthr")], 0).getTime());
         tr2_endX = countDay(schedule[i][header.indexOf("Tr2_End")], 0).getTime();
     }
-    console.log(countDay(refDay, 0).getTime());
-    console.log(tr2_startX);
-    console.log(countDay(refDay, 0).getTime() < tr2_startX);
     if (countDay(refDay, 0).getTime() < tr2_startX) {
         schedule[i][header.indexOf("Tr2_inWindow")] = "preWindow";
     } else if (tr2_startX <= countDay(refDay, 0).getTime() && countDay(refDay, 0).getTime() <= tr2_endX) {
@@ -317,7 +314,6 @@ for (var i = 1; i < schedule.length; i++) {
         });
         document.getElementById("tr2_outWindow_neverStarted").style.display = "block";
     }
-    console.log(scenario5);
     </script>
 </div>
 
