@@ -46,13 +46,7 @@ for (var i = 1; i < schedule.length; i++) {
     } else {
         schedule[i][header.indexOf("Tr2_inWindow")] = "postWindow";
     }
-/*
-    if (tr2_startX <= countDay(refDay, 0).getTime() && countDay(refDay, 0).getTime() <= tr2_endX) {
-        schedule[i][header.indexOf("Tr2_inWindow")]=true;
-    } else {
-        schedule[i][header.indexOf("Tr2_inWindow")]=false;
-    }
-*/
+
     //Gestational Age as of reference date
     if (schedule[i][header.indexOf("DueDate")]!="") {
         schedule[i][header.indexOf("GestAge")] = gestationalAge(countDay(refDay, 0), schedule[i][header.indexOf("DueDate")]);
@@ -291,7 +285,7 @@ for (var i = 1; i < schedule.length; i++) {
     <script type="text/javascript">
     scenario5 = [schedule[0]];
     for (var i = 1; i < schedule.length; i++) {
-        if (schedule[i][header.indexOf("Withdraw")]=="" && schedule[i][header.indexOf("Tr2_Ques")]=="neverStarted" && schedule[i][header.indexOf("Tr2_inWindow")]=="postWindw") {
+        if (schedule[i][header.indexOf("Withdraw")]=="" && schedule[i][header.indexOf("Tr2_Ques")]=="neverStarted" && schedule[i][header.indexOf("Tr2_inWindow")]=="postWindow") {
             scenario5.push(schedule[i]);
         }
     }
