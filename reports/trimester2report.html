@@ -31,7 +31,7 @@ for (var i = 1; i < schedule.length; i++) {
     // in window for tr2, at least 21 days has passed from visit 2 to reference date, use countDay to convert string to date
     var tr2_startX = "";
     var tr2_endX = "";
-    if (schedule[i][header.indexOf("Tr1_Anthr")==""]) {
+    if (schedule[i][header.indexOf("Tr1_Anthr")]=="") {
         tr2_startX = countDay(schedule[i][header.indexOf("Tr2_Start")], 0).getTime();
         tr2_endX = countDay(schedule[i][header.indexOf("Tr2_End")], 0).getTime();
     } else {
