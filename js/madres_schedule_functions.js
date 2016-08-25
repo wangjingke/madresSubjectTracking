@@ -1,5 +1,4 @@
-
-function upload(inputFile) {
+function uploadRedCap(inputFile) {
     var fileUpload = document.getElementById(inputFile);
     var regex = /^([a-zA-Z0-9\s_\\.\-:])+(.csv|.txt)$/;
     if (regex.test(fileUpload.value.toLowerCase())) {
