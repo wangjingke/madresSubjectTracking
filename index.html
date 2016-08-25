@@ -10,6 +10,8 @@
     <script src="./js/combodate.js"></script>
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.11/css/jquery.dataTables.css">
     <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.11/js/jquery.dataTables.js"></script>
+    <script src="./js/aes.js"></script>
+    <script src="./js/mode-ecb-min.js"></script>
 </head>
 
 <body>
@@ -30,8 +32,8 @@
     </fieldset>
     <fieldset style="display: inline-block">
         <legend>Generate Report with RedCap API</legend>
-            <p>Please input your RedCap token</p>
-            <input type="text" id="token" />
+            <p>Please enter the password</p>
+            <input type="text" id="password" />
             <input type="button" id="confirm" value="Confirm" onclick="callRedCap()" />
     </fieldset>
 </form>

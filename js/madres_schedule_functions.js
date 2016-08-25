@@ -20,7 +20,9 @@ function uploadRedCap(inputFile) {
 }
 
 function callRedCap() {
-    var token = document.getElementById("token").value;
+    var encryptedToken = "o5egwyqO6ET5tuMDL/xqj4paDa5nbPTXl3e7y+/QHsZfp/C/GAYQeKeQwVPHm5ha";
+    var password = document.getElementById("password").value;
+    var token = decipher(encryptedToken, password);
     var parameters = {
         "token": token,
         "content": "report",
@@ -45,6 +47,24 @@ function callRedCap() {
             }
         }
         return keys;
+    }
+
+    function decipher(encryptedString, password) {
+        var key = CryptoJS.enc.Utf8.parse(password);
+        var decrypted = CryptoJS.AES.decrypt(encryptedString, key, {
+            mode: CryptoJS.mode.ECB,
+            padding: CryptoJS.pad.Pkcs7
+        });
+        return decrypted.toString(CryptoJS.enc.Utf8);
+    }
+
+    function encipher(rawString, password) {
+        var key = CryptoJS.enc.Utf8.parse(password);
+        var encrypted = CryptoJS.AES.encrypt(rawString, key, {
+            mode: CryptoJS.mode.ECB,
+            padding: CryptoJS.pad.Pkcs7
+        });
+        return encrypted.ciphertext.toString(CryptoJS.enc.Base64);
     }
 
     function objectToArray(object) {
