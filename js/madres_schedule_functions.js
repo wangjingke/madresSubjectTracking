@@ -20,6 +20,52 @@ function upload(inputFile) {
     document.getElementById("process").disabled = false;
 }
 
+function callRedCap() {
+    var token = document.getElementById("token").value;
+    var parameters = {
+        "token": token,
+        "content": "report",
+        "format": "json",
+        "report_id": 4462
+    };
+
+    $.ajax({
+        url: "https://redcap.sc-ctsi.org/api/",
+        type: "POST",
+        dataType: "json",
+        data: parameters
+    }).done(function(data){
+        redCap = objectToArray(data);
+    });
+
+    function getKeys(obj) {
+        var keys = [];
+        for(var key in obj){
+            if (obj.hasOwnProperty(key)) {
+                keys.push(key);
+            }
+        }
+        return keys;
+    }
+
+    function objectToArray(object) {
+        // var properties = Object.keys(object[0]);
+        var properties = getKeys(object[0]);
+        var outputArray = {data: [properties]};
+        for (var i = 0; i < object.length; i++) {
+            var arrayX = [];
+            for (var key in object[i]) {
+                if (object[i].hasOwnProperty(key)) {
+                    arrayX.push(object[i][key]);
+                }
+            }
+            outputArray.data.push(arrayX);
+        }
+        return outputArray;
+    }
+    document.getElementById("process").disabled = false;
+}
+
 function getAllIndexes(arr, val) {
     var indexes = [];
     for(var j = 0; j < arr.length; j++) {
