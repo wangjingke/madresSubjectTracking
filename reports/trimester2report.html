@@ -49,6 +49,8 @@ for (var i = 1; i < schedule.length; i++) {
     //Gestational Age as of reference date
     if (schedule[i][header.indexOf("DueDate")]!="") {
         schedule[i][header.indexOf("GestAge")] = gestationalAge(countDay(refDay, 0), schedule[i][header.indexOf("DueDate")]);
+    } else {
+        schedule[i][header.indexOf("GestAge")] = "";
     }
 }
 </script>
